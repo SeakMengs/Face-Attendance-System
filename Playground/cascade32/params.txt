@@ -1,0 +1,1 @@
+Used: opencv_traincascade -data cascade32/ -vec positives32.vec -bg negatives.txt -w 32 -h 32 -numPos 500 -numNeg 250  -numStages 10 -maxFalseAlarmRate 0.2 -minHitRate 0.999 -precalcValBufSize 10240 -precalcIdxBufSize 10240
