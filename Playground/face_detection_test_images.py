@@ -8,7 +8,7 @@ def detect_face(frame):
 
     # Perform face detection
     faces = face_cascade.detectMultiScale(
-        frame, scaleFactor=1.1, minNeighbors=6, minSize=(30, 30))
+        frame, scaleFactor=1.05, minNeighbors=6, minSize=(30, 30))
 
     # Draw rectangles around the detected faces
     for (x, y, w, h) in faces:

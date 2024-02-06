@@ -10,8 +10,8 @@ face_cascade = cv2.CascadeClassifier(cascade_path)
 # video sample credit: https://github.com/intel-iot-devkit/sample-videos?tab=readme-ov-file
 # Open a connection to the webcam (0 represents the default webcam)
 # cap = cv2.VideoCapture('test_videos\\face-demographics-walking.mp4')
-cap = cv2.VideoCapture('test_videos\\head-pose-face-detection-female.mp4')
-# cap = cv2.VideoCapture('test_videos\\head-pose-face-detection-male.mp4')
+# cap = cv2.VideoCapture('test_videos\\head-pose-face-detection-female.mp4')
+cap = cv2.VideoCapture('test_videos\\head-pose-face-detection-male.mp4')
 # cap = cv2.VideoCapture('test_videos\\face-demographics-walking-and-pause.mp4')
 
 while cap.isOpened():
@@ -22,7 +22,7 @@ while cap.isOpened():
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # Perform face detection
     faces = face_cascade.detectMultiScale(
-        gray, scaleFactor=1.1, minNeighbors=6, minSize=(30, 30))
+        gray, scaleFactor=1.05, minNeighbors=6, minSize=(30, 30))
 
     # Draw rectangles around the detected faces
     for (x, y, w, h) in faces:
