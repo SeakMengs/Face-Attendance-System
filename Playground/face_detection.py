@@ -2,12 +2,12 @@ import cv2
 import os
 
 # Load the pre-trained Haar cascade XML file
-# cascade_path = 'cascade28\cascade.xml'
-cascade_path = 'pre-train\haarcascade_frontalface_default.xml'
+cascade_path = 'cascade5k\cascade.xml'
+# cascade_path = 'pre-train\haarcascade_frontalface_default.xml'
 face_cascade = cv2.CascadeClassifier(cascade_path)
 
 # Open a connection to the webcam (0 represents the default webcam)
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 while True:
     # Read a frame from the webcam
@@ -16,7 +16,8 @@ while True:
     # Convert the frame to grayscale for face detection
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # Perform face detection
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5, minSize=(30, 30))
+    faces = face_cascade.detectMultiScale(
+        gray, scaleFactor=1.1, minNeighbors=6, minSize=(30, 30))
 
     # Draw rectangles around the detected faces
     for (x, y, w, h) in faces:

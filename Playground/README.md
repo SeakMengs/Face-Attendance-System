@@ -63,3 +63,21 @@ Number of stages you should chose by yourself (for me it is 12-13). The more sta
 But if you get acceptanceRatio like this 7.83885e-07 your cascade is probably overtrained and it wont find anything, try to set less stages.
 
 !!! And one more important thing, when you train your cascade you should have more than one feature on your stage beginning from 2 or 3 stage. If you have only one feature you wont get good cascade. You should work on your training images (negative and positive samples). Normal training will look like this:
+
+
+## 5k Train
+
+Create 5k positive samples
+```
+opencv_createsamples -info positives5k.txt -w 28 -h 28 -num 5000 -vec positives5k.vec
+```
+
+Train 5k
+```
+opencv_traincascade -data cascade5k/ -vec positives5k.vec -bg negatives5k.txt -w 28 -h 28 -numPos 5000 -numNeg 2500 -numStages 10 -maxFalseAlarmRate 0.3 -minHitRate 0.999
+```
+
+## Resource
+
+Positive: https://drive.google.com/drive/folders/1tg-Ur7d4vk1T8Bn0pPpUSQPxlPGBlGfv
+Negative data set: https://github.com/handaga/tutorial-haartraining/tree/master/data/negatives
