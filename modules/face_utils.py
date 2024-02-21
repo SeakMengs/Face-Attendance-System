@@ -10,7 +10,13 @@ import pandas as pd
 from tkinter import messagebox
 
 cascade_path = 'data/haarcascade_frontalface_default.xml'
-MAX_FACES_RECORD = 100
+# cascade_path = 'data/cascade5k.xml'
+MAX_FACES_RECORD = 150
+FACE_RECOGNITION_THRESHOLD = 0.05
+# FACE_RECOGNITION_THRESHOLD = 0.7
+KNN_N_NEIGHBORS = 8
+DETECT_MULTI_SCALE = 1.1
+DETECT_MIN_NEIGHBORS = 6
 FACE_JSON_FILE_NAME = 'face_data.json'
 COL = ['Student_ID', 'Name', 'Date', 'Time']
 
@@ -88,14 +94,14 @@ def add_face(name: str, studentId: str, webcamIndex: int) -> bool:
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(
-            gray, scaleFactor=1.05, minNeighbors=6, minSize=(30, 30))
+            gray, scaleFactor=DETECT_MULTI_SCALE, minNeighbors=DETECT_MIN_NEIGHBORS, minSize=(30, 30))
 
         for (x, y, w, h) in faces:
             # crop image, [y:y+h, x:x+w] = [height, width]
             crop_img = frame[y:y+h, x:x+w]
             # resize image to 50x50
             resized_img = cv2.resize(crop_img, (50, 50))
-            if len(face_data) <= MAX_FACES_RECORD and i % 10 == 0:
+            if len(face_data) <= MAX_FACES_RECORD and i % 2 == 0:
                 face_data.append(resized_img.tolist())
             i = i+1
 
@@ -191,6 +197,18 @@ def save_attendance(student_id) -> bool:
     return True
 
 
+# pass distance[0]
+@jit(nopython=True)
+def distance_to_confidence(distance) -> float:
+    max_distance = np.max(distance)
+    min_distance = np.min(distance)
+    return (max_distance - min_distance) / (max_distance + min_distance)
+
+# @jit(nopython=True)
+# def distance_to_confidence(distance) -> float:
+#     scaled_distance = (distance - np.min(distance)) / (np.max(distance) - np.min(distance))
+#     return np.mean(scaled_distance)
+
 def face_attendance(webcamIndex: int) -> bool:
     if webcamIndex < 0:
         webcamIndex = 0
@@ -200,7 +218,8 @@ def face_attendance(webcamIndex: int) -> bool:
     if len(json_data) == 0:
         print("No face data found")
         return False
-    knn = KNeighborsClassifier(n_neighbors=5)
+    # n_neighbors the more the better
+    knn = KNeighborsClassifier(n_neighbors=KNN_N_NEIGHBORS)
     x = []
     y = []
     for student in json_data:
@@ -219,13 +238,33 @@ def face_attendance(webcamIndex: int) -> bool:
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(
-            gray, scaleFactor=1.05, minNeighbors=6, minSize=(30, 30))
+            gray, scaleFactor=DETECT_MULTI_SCALE, minNeighbors=DETECT_MIN_NEIGHBORS, minSize=(30, 30))
 
         for (x, y, w, h) in faces:
             # crop image, [y:y+h, x:x+w] = [height, width]
             crop_img = frame[y:y+h, x:x+w]
             # resize image to 50x50
             resized_img = cv2.resize(crop_img, (50, 50)).reshape(1, -1)
+
+            distances, indices = knn.kneighbors(
+                resized_img, n_neighbors=KNN_N_NEIGHBORS)
+            
+            confidence = distance_to_confidence(distances[0])
+            # if confidence is less than threshold, then it's unknown face
+            unkown_face = confidence <= FACE_RECOGNITION_THRESHOLD
+
+            # draw rectangle around face if unkown face rectangle red else green
+            cv2.rectangle(img=frame, pt1=(x, y), pt2=(x+w, y+h),
+                          color=(0, 0, 255) if unkown_face else (0, 255, 0), thickness=2)
+            
+            print(f"Confidence: {confidence}")
+            
+            if unkown_face:
+                cv2.putText(img=frame, text=f"Unknown, confidence: {round(confidence, 2)}", org=(
+                    x, y-10), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=(0, 0, 255), thickness=2)
+                continue
+
+            # if face is known, then find the student id
             prediction = knn.predict(resized_img)
             student_id = prediction[0]
 
@@ -240,8 +279,6 @@ def face_attendance(webcamIndex: int) -> bool:
                 x, y-10), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=(0, 255, 0), thickness=2)
             cv2.putText(img=frame, text=f"Attendance: {'marked' if detected_students[student_id]['attendance'] else 'not marked yet'}", org=(
                 x, y-30), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=(0, 255, 0), thickness=2)
-            cv2.rectangle(img=frame, pt1=(x, y), pt2=(x+w, y+h),
-                          color=(0, 255, 0), thickness=2)
 
         cv2.imshow('Face Attendance', frame)
 
