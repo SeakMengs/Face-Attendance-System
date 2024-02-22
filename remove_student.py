@@ -3,11 +3,9 @@ def main():
     import json
     import os
 
-    # read the json file
     with open('data/face_data.json') as f:
         data = json.load(f)
 
-    # get the student id
     student_id = input("Enter the student id: ")
 
     # remove the student from the json
